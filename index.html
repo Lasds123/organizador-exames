@@ -117,7 +117,7 @@
       const compostos = [
         { nome: 'TTPA', regex: /Tempo Tromboplastina Parcial Ativada[:\s]*([\d.,%]+)/i },
         { nome: 'TAP', regex: /Atividade de Protrombina[:\s]*([\d.,%]+)/i },
-        { nome: 'RR', regex: /R[áa]tio[:\s]*([\d.,%]+)|Rela[çc][aã]o Paciente\/Normal[:\s]*([\d.,%]+)/i },
+        { nome: 'RR', regex: /(R[áa]tio|Rela[çc][aã]o Paciente\/Normal)[:\s]*([\d.,%]+)/i },
         { nome: 'PCR', regex: /Prote[ií]na C Reativa[:\s]*([\d.,%]+)/i },
         { nome: 'GLI', regex: /Glicemia(?: em jejum)?[:\s]*([\d.,%]+)/i }
       ];
@@ -125,7 +125,7 @@
       compostos.forEach(comp => {
         const match = entradaRaw.match(comp.regex);
         if (match) {
-          const valor = match[1] || match[2];
+          const valor = match[2] || match[1];
           if (valor) {
             mapa[comp.nome] = valor.replace(",", ".");
             entrada = entrada.replace(comp.regex, '');
@@ -155,12 +155,9 @@
 
         if (!mapa[sigla]) {
           let valor = extrairValor(palavrasRaw[i + 1]);
-          if (valor) {
-            // Ignorar padrões de datas ou intervalos tipo 21/95/23
-            if (!/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(valor)) {
-              mapa[sigla] = valor;
-              i++;
-            }
+          if (valor && !/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(valor)) {
+            mapa[sigla] = valor;
+            i++;
           }
         }
       }
