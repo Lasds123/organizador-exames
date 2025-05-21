@@ -94,17 +94,18 @@
       return null;
     }
 
-    // Função atualizada para ignorar datas e intervalos
+    // Remove datas e intervalos do texto (ex: 21/05/2023, 12/12, 05/23)
+    function removerDatasIntervalos(texto) {
+      return texto.replace(/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/g, ' ');
+    }
+
     function extrairValor(texto) {
       if (!texto) return null;
 
-      // Ignorar valores que tenham barras (ex: datas ou intervalos)
+      // Ignorar tokens com barras (datas, intervalos)
       if (texto.includes('/')) return null;
 
-      // Ignorar formatos típicos de datas dd/mm/aa(aa)
-      if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(texto)) return null;
-
-      // Extrai números (com vírgulas ou pontos e opcional %)
+      // Extrai números (com vírgula ou ponto e opcional %)
       const match = texto.match(/^[\d.,]+%?$/);
       if (match) {
         return match[0].replace(",", ".");
@@ -118,7 +119,11 @@
     }
 
     function processar() {
-      const entradaRaw = document.getElementById('entrada').value;
+      let entradaRaw = document.getElementById('entrada').value;
+
+      // Remove datas e intervalos ANTES de processar
+      entradaRaw = removerDatasIntervalos(entradaRaw);
+
       let entrada = entradaRaw;
 
       let mapa = {};
@@ -134,11 +139,8 @@
       compostos.forEach(comp => {
         const match = entradaRaw.match(comp.regex);
         if (match) {
-          const valor = match[2] || match[1];
-          if (valor) {
-            mapa[comp.nome] = valor.replace(",", ".");
-            entrada = entrada.replace(comp.regex, '');
-          }
+          mapa[comp.nome] = match[2] || match[1];
+          entrada = entrada.replace(comp.regex, '');
         }
       });
 
