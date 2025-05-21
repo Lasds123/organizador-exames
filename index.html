@@ -61,8 +61,8 @@
       'LEUCO': ['leuco', 'leucocitos', 'leucócitos'],
       'PLT': ['plt', 'plaquetas', 'plq', 'PLQ'],
       'INR': ['inr', 'RNI'],
-      'TTPA': ['ttpa', 'tempo tromboplastina parcial ativada'],
-      'TAP': ['tap', 'atividade de protrombina'],
+      'TTPA': ['ttpa', 'Tempo Tromboplastina Parcial Ativada'],
+      'TAP': ['tap', 'Atividade de Protrombina'],
       'RR': ['rr', 'ratio', 'rátio', 'relação paciente normal'],
       'U': ['ureia', 'urea', 'u'],
       'CR': ['creatinina', 'cr'],
@@ -94,15 +94,16 @@
       return null;
     }
 
-    // Verifica se é um intervalo tipo "3.9 A 5" ou "3-5"
-    function ehIntervalo(texto) {
-      return /^\d+([.,]\d+)?\s*[Aa-]\s*\d+([.,]\d+)?/.test(texto);
-    }
-
-    // Extrai o primeiro valor numérico válido ignorando intervalos e datas
+    // Extrai o primeiro valor numérico válido ignorando intervalos (ex: "3.9 A 5")
     function extrairValor(texto) {
       if (!texto) return null;
-      if (ehIntervalo(texto)) return null;
+
+      // Se for um intervalo do tipo "X A Y" ou "X - Y", retorna null
+      if (/^\d+([.,]\d+)?\s*[Aa-]\s*\d+([.,]\d+)?/.test(texto)) {
+        return null;
+      }
+
+      // Pega o primeiro número válido na string
       const match = texto.match(/[\d.,]+%?/);
       if (match) {
         return match[0].replace(",", ".");
@@ -121,16 +122,16 @@
 
       let mapa = {};
 
+      // Processar nomes compostos primeiro para extrair valores e remover do texto
       const compostos = [
-        { nome: 'TTPA', regex: /tempo tromboplastina parcial ativada[:\s]*([\d.,%]+)/i },
-        { nome: 'TAP', regex: /atividade de protrombina[:\s]*([\d.,%]+)/i },
-        { nome: 'RR', regex: /r[áa]tio[:\s]*([\d.,%]+)/i },
-        { nome: 'RR', regex: /relação paciente\/normal[:\s]*([\d.,%]+)/i },
-        { nome: 'PCR', regex: /prote[ií]na c reativa[:\s]*([\d.,%]+)/i },
-        { nome: 'GLI', regex: /glicemia(?: em jejum)?[:\s]*([\d.,%]+)/i }
+        { nome: 'TTPA', regex: /Tempo Tromboplastina Parcial Ativada[:\s]*([\d.,%]+)/i },
+        { nome: 'TAP', regex: /Atividade de Protrombina[:\s]*([\d.,%]+)/i },
+        { nome: 'RR', regex: /R[áa]tio[:\s]*([\d.,%]+)/i },
+        { nome: 'RR', regex: /Rela[cç][aã]o Paciente\/Normal[:\s]*([\d.,%]+)/i },
+        { nome: 'PCR', regex: /Prote[ií]na C Reativa[:\s]*([\d.,%]+)/i },
+        { nome: 'GLI', regex: /Glicemia(?: em jejum)?[:\s]*([\d.,%]+)/i }
       ];
 
-      // Extrai valores dos compostos e remove do texto
       compostos.forEach(comp => {
         const match = entrada.match(comp.regex);
         if (match) {
@@ -143,38 +144,26 @@
       const palavrasRaw = entrada.replace(/\n/g, ' ').trim().split(/\s+/);
 
       for (let i = 0; i < palavrasRaw.length; i++) {
-        // Verificar valor ANTES do nome
-        let valorAntes = extrairValor(palavrasRaw[i]);
-        let palavraDepois = palavrasRaw[i + 1] ? removerAcentos(palavrasRaw[i + 1].toLowerCase()).replace(/[^a-z0-9]/g, '') : null;
-        let siglaAntes = palavraDepois ? normalizar(palavraDepois) : null;
+        let palavraLimpa = removerAcentos(palavrasRaw[i].toLowerCase()).replace(/[^a-z0-9]/g, '');
+        let sigla = normalizar(palavraLimpa);
 
-        if (siglaAntes && valorAntes && !mapa[siglaAntes]) {
-          mapa[siglaAntes] = valorAntes;
-          i++; // pula próximo porque já usou
-          continue;
-        }
-
-        // Se não for valor antes do nome, tenta nome e valor depois
-        let palavraAtual = removerAcentos(palavrasRaw[i].toLowerCase()).replace(/[^a-z0-9]/g, '');
-        let siglaAtual = normalizar(palavraAtual);
-
-        if (!siglaAtual) {
-          // Tenta formato tipo "Nome:valor"
+        if (!sigla) {
           const regex = /^([a-zA-Z]+)[:\-]?([\d.,%]+)/;
           const res = palavrasRaw[i].match(regex);
           if (res) {
-            let siglaRegex = normalizar(removerAcentos(res[1].toLowerCase()).replace(/[^a-z0-9]/g, ''));
-            if (siglaRegex && !mapa[siglaRegex]) {
-              mapa[siglaRegex] = res[2].replace(",", ".");
+            sigla = normalizar(removerAcentos(res[1].toLowerCase()).replace(/[^a-z0-9]/g, ''));
+            if (sigla && !mapa[sigla]) {
+              let val = res[2].replace(",", ".");
+              mapa[sigla] = val;
             }
           }
           continue;
         }
 
-        if (!mapa[siglaAtual]) {
-          let valorDepois = extrairValor(palavrasRaw[i + 1]);
-          if (valorDepois) {
-            mapa[siglaAtual] = valorDepois;
+        if (!mapa[sigla]) {
+          let valor = extrairValor(palavrasRaw[i + 1]);
+          if (valor) {
+            mapa[sigla] = valor;
             i++;
           }
         }
