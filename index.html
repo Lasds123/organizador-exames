@@ -68,7 +68,7 @@
       'CR': ['creatinina', 'cr'],
       'NA': ['na', 'sodio', 'sódio'],
       'K': ['k', 'potassio', 'potássio'],
-      'PCR': ['pcr'],
+      'PCR': ['pcr', 'Proteina C Reativa', 'Proteína C Reativa'],
       'GLI': ['glicose', 'glucose', 'gli'],
       'AST': ['tgo', 'ast'],
       'ALT': ['tgp', 'alt'],
@@ -114,11 +114,11 @@
 
       let mapa = {};
 
-      // Busca direta por expressões compostas
       const compostos = [
         { nome: 'TTPA', regex: /Tempo Tromboplastina Parcial Ativada[:\s]*([\d.,%]+)/i },
         { nome: 'TAP', regex: /Atividade de Protrombina[:\s]*([\d.,%]+)/i },
-        { nome: 'RR', regex: /R[áa]tio[:\s]*([\d.,%]+)/i }
+        { nome: 'RR', regex: /R[áa]tio[:\s]*([\d.,%]+)/i },
+        { nome: 'PCR', regex: /Prote[ií]na C Reativa[:\s]*([\d.,%]+)/i }
       ];
 
       compostos.forEach(comp => {
@@ -180,3 +180,4 @@
   <div class="footer-credit">by chatGPT e Leo.SS</div>
 </body>
 </html>
+
