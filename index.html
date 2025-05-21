@@ -63,7 +63,7 @@
       'INR': ['inr', 'RNI'],
       'TTPA': ['ttpa', 'Tempo Tromboplastina Parcial Ativada'],
       'TAP': ['tap', 'Atividade de Protrombina'],
-      'RR': ['rr', 'Rátio'],
+      'RR': ['rr', 'ratio', 'rátio'],
       'U': ['ureia', 'urea', 'u'],
       'CR': ['creatinina', 'cr'],
       'NA': ['na', 'sodio', 'sódio'],
@@ -117,7 +117,8 @@
       // Busca direta por expressões compostas
       const compostos = [
         { nome: 'TTPA', regex: /Tempo Tromboplastina Parcial Ativada[:\s]*([\d.,%]+)/i },
-        { nome: 'TAP', regex: /Atividade de Protrombina[:\s]*([\d.,%]+)/i }
+        { nome: 'TAP', regex: /Atividade de Protrombina[:\s]*([\d.,%]+)/i },
+        { nome: 'RR', regex: /R[áa]tio[:\s]*([\d.,%]+)/i }
       ];
 
       compostos.forEach(comp => {
