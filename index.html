@@ -61,8 +61,8 @@
       'LEUCO': ['leuco', 'leucocitos', 'leucócitos'],
       'PLT': ['plt', 'plaquetas', 'plq', 'PLQ'],
       'INR': ['inr', 'RNI'],
-      'TTPA': ['ttpa', 'tempo tromboplastina parcial ativada'],
-      'TAP': ['tap', 'atividade de protrombina'],
+      'TTPA': ['ttpa', 'Tempo Tromboplastina Parcial Ativada'],
+      'TAP': ['tap', 'Atividade de Protrombina'],
       'RR': ['rr', 'ratio', 'rátio', 'relação paciente normal'],
       'U': ['ureia', 'urea', 'u'],
       'CR': ['creatinina', 'cr'],
@@ -94,13 +94,16 @@
       return null;
     }
 
-    function ehIntervalo(texto) {
-      return /^\d+([.,]\d+)?\s*[Aa-]\s*\d+([.,]\d+)?/.test(texto);
-    }
-
+    // Extrai o primeiro valor numérico válido ignorando intervalos (ex: "3.9 A 5")
     function extrairValor(texto) {
       if (!texto) return null;
-      if (ehIntervalo(texto)) return null;
+
+      // Se for um intervalo do tipo "X A Y" ou "X - Y", retorna null
+      if (/^\d+([.,]\d+)?\s*[Aa-]\s*\d+([.,]\d+)?/.test(texto)) {
+        return null;
+      }
+
+      // Pega o primeiro número válido na string
       const match = texto.match(/[\d.,]+%?/);
       if (match) {
         return match[0].replace(",", ".");
@@ -119,13 +122,14 @@
 
       let mapa = {};
 
+      // Processar nomes compostos primeiro para extrair valores e remover do texto
       const compostos = [
-        { nome: 'TTPA', regex: /tempo tromboplastina parcial ativada[:\s]*([\d.,%]+)/i },
-        { nome: 'TAP', regex: /atividade de protrombina[:\s]*([\d.,%]+)/i },
-        { nome: 'RR', regex: /r[áa]tio[:\s]*([\d.,%]+)/i },
-        { nome: 'RR', regex: /relação paciente\/normal[:\s]*([\d.,%]+)/i },
-        { nome: 'PCR', regex: /prote[ií]na c reativa[:\s]*([\d.,%]+)/i },
-        { nome: 'GLI', regex: /glicemia(?: em jejum)?[:\s]*([\d.,%]+)/i }
+        { nome: 'TTPA', regex: /Tempo Tromboplastina Parcial Ativada[:\s]*([\d.,%]+)/i },
+        { nome: 'TAP', regex: /Atividade de Protrombina[:\s]*([\d.,%]+)/i },
+        { nome: 'RR', regex: /R[áa]tio[:\s]*([\d.,%]+)/i },
+        { nome: 'RR', regex: /Rela[cç][aã]o Paciente\/Normal[:\s]*([\d.,%]+)/i },
+        { nome: 'PCR', regex: /Prote[ií]na C Reativa[:\s]*([\d.,%]+)/i },
+        { nome: 'GLI', regex: /Glicemia(?: em jejum)?[:\s]*([\d.,%]+)/i }
       ];
 
       compostos.forEach(comp => {
