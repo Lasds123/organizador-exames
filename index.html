@@ -9,6 +9,7 @@
       padding: 20px;
       background: #f5f5f5;
       min-height: 100vh;
+      position: relative;
       margin: 0;
       box-sizing: border-box;
     }
@@ -61,15 +62,15 @@
       'LEUCO': ['leuco', 'leucocitos', 'leucócitos'],
       'PLT': ['plt', 'plaquetas', 'plq', 'PLQ'],
       'INR': ['inr', 'RNI'],
-      'TTPA': ['ttpa', 'Tempo Tromboplastina Parcial Ativada'],
-      'TAP': ['tap', 'Atividade de Protrombina'],
-      'RR': ['rr', 'ratio', 'rátio'],
+      'TTPA': ['ttpa','Tempo Tromboplastina Parcial Ativada'],
+      'TAP': ['tap','Atividade de Protrombina'],
+      'RR': ['rr', 'rátio', 'ratio'],
       'U': ['ureia', 'urea', 'u'],
       'CR': ['creatinina', 'cr'],
       'NA': ['na', 'sodio', 'sódio'],
       'K': ['k', 'potassio', 'potássio'],
-      'PCR': ['pcr', 'Proteina C Reativa', 'Proteína C Reativa'],
-      'GLI': ['glicose', 'glucose', 'gli', 'glicemia', 'glicemia em jejum'],
+      'PCR': ['pcr', 'proteina c reativa'],
+      'GLI': ['glicose', 'glucose', 'gli'],
       'AST': ['tgo', 'ast'],
       'ALT': ['tgp', 'alt'],
       'TSH': ['tsh'],
@@ -96,7 +97,11 @@
 
     function extrairValor(texto) {
       if (!texto) return null;
-      const match = texto.match(/[\d.,]+%?/);
+
+      // Ignora formatos com barras (datas, intervalos)
+      if (/[0-9]+\/[0-9]+/.test(texto)) return null;
+
+      const match = texto.match(/\b\d+[.,]?\d*\b%?/);
       if (match) {
         return match[0].replace(",", ".");
       }
@@ -110,28 +115,9 @@
 
     function processar() {
       const entradaRaw = document.getElementById('entrada').value;
-      let entrada = entradaRaw;
-
-      let mapa = {};
-
-      const compostos = [
-        { nome: 'TTPA', regex: /Tempo Tromboplastina Parcial Ativada[:\s]*([\d.,%]+)/i },
-        { nome: 'TAP', regex: /Atividade de Protrombina[:\s]*([\d.,%]+)/i },
-        { nome: 'RR', regex: /R[áa]tio[:\s]*([\d.,%]+)/i },
-        { nome: 'PCR', regex: /Prote[ií]na C Reativa[:\s]*([\d.,%]+)/i },
-        { nome: 'GLI', regex: /Glicemia(?: em jejum)?[:\s]*([\d.,%]+)/i }
-      ];
-
-      compostos.forEach(comp => {
-        const match = entradaRaw.match(comp.regex);
-        if (match) {
-          mapa[comp.nome] = match[1].replace(",", ".");
-          entrada = entrada.replace(comp.regex, '');
-        }
-      });
-
-      entrada = separarNumerosLetras(entrada);
+      const entrada = separarNumerosLetras(entradaRaw);
       const palavrasRaw = entrada.replace(/\n/g, ' ').trim().split(/\s+/);
+      let mapa = {};
 
       for (let i = 0; i < palavrasRaw.length; i++) {
         let palavraLimpa = removerAcentos(palavrasRaw[i].toLowerCase()).replace(/[^a-z0-9]/g, '');
@@ -144,7 +130,10 @@
             sigla = normalizar(removerAcentos(res[1].toLowerCase()).replace(/[^a-z0-9]/g, ''));
             if (sigla && !mapa[sigla]) {
               let val = res[2].replace(",", ".");
-              mapa[sigla] = val;
+              // Ignora se for formato com barra
+              if (!/[0-9]+\/[0-9]+/.test(val)) {
+                mapa[sigla] = val;
+              }
             }
           }
           continue;
@@ -178,6 +167,6 @@
     }
   </script>
 
-  <div class="footer-credit">by chatGPT e Leo.SS</div>
+  <div class="footer-credit">by ChatGPT & Leo.SS</div>
 </body>
 </html>
