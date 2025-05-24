@@ -137,10 +137,12 @@
       ];
 
       compostos.forEach(comp => {
-        const match = entradaRaw.match(comp.regex);
+        const match = entrada.match(comp.regex);
         if (match) {
-          mapa[comp.nome] = match[2] || match[1];
-          entrada = entrada.replace(comp.regex, '');
+          // Sempre o grupo 1, que é o número
+          mapa[comp.nome] = match[1].replace(',', '.');
+          // Remove exatamente a parte encontrada do texto para não atrapalhar o parse normal
+          entrada = entrada.replace(match[0], '');
         }
       });
 
@@ -195,3 +197,4 @@
   <div class="footer-credit">by chatGPT e Leo.SS</div>
 </body>
 </html>
+
