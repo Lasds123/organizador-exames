@@ -63,7 +63,7 @@
       'INR': ['inr', 'RNI'],
       'TTPA': ['ttpa', 'Tempo Tromboplastina Parcial Ativada'],
       'TAP': ['tap', 'Atividade de Protrombina'],
-      'RR': ['rr', 'ratio', 'rátio', 'Relação Paciente/Normal'],
+      'RR': ['rr', 'ratio', 'rátio', 'Relação Paciente/Normal', 'Relação INR Paciente'],
       'U': ['ureia', 'urea', 'u'],
       'CR': ['creatinina', 'cr'],
       'NA': ['na', 'sodio', 'sódio'],
@@ -94,18 +94,13 @@
       return null;
     }
 
-    // Remove datas e intervalos do texto (ex: 21/05/2023, 12/12, 05/23)
     function removerDatasIntervalos(texto) {
       return texto.replace(/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/g, ' ');
     }
 
     function extrairValor(texto) {
       if (!texto) return null;
-
-      // Ignorar tokens com barras (datas, intervalos)
       if (texto.includes('/')) return null;
-
-      // Extrai números (com vírgula ou ponto e opcional %)
       const match = texto.match(/^[\d.,]+%?$/);
       if (match) {
         return match[0].replace(",", ".");
@@ -120,18 +115,17 @@
 
     function processar() {
       let entradaRaw = document.getElementById('entrada').value;
-
-      // Remove datas e intervalos ANTES de processar
       entradaRaw = removerDatasIntervalos(entradaRaw);
-
       let entrada = entradaRaw;
-
       let mapa = {};
 
       const compostos = [
         { nome: 'TTPA', regex: /Tempo Tromboplastina Parcial Ativada[:\s]*([\d.,%]+)/i },
         { nome: 'TAP', regex: /Atividade de Protrombina[:\s]*([\d.,%]+)/i },
-        { nome: 'RR', regex: /(R[áa]tio|Rela[çc][aã]o Paciente\/Normal)[:\s]*([\d.,%]+)/i },
+        { 
+          nome: 'RR', 
+          regex: /(R[áa]tio|Rela[çc][aã]o\s*(?:INR\s*)?Paciente\/?Normal?|Rela[çc][aã]o\s*INR\s*Paciente)[:\s]*([\d.,%]+)/i 
+        },
         { nome: 'PCR', regex: /Prote[ií]na C Reativa[:\s]*([\d.,%]+)/i },
         { nome: 'GLI', regex: /Glicemia(?: em jejum)?[:\s]*([\d.,%]+)/i }
       ];
@@ -139,9 +133,7 @@
       compostos.forEach(comp => {
         const match = entrada.match(comp.regex);
         if (match) {
-          // Sempre o grupo 1, que é o número
-          mapa[comp.nome] = match[1].replace(',', '.');
-          // Remove exatamente a parte encontrada do texto para não atrapalhar o parse normal
+          mapa[comp.nome] = match[2].replace(',', '.');
           entrada = entrada.replace(match[0], '');
         }
       });
@@ -197,4 +189,3 @@
   <div class="footer-credit">by chatGPT e Leo.SS</div>
 </body>
 </html>
-
