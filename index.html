@@ -133,7 +133,7 @@
       compostos.forEach(comp => {
         const match = entrada.match(comp.regex);
         if (match) {
-          mapa[comp.nome] = match[2].replace(',', '.');
+          mapa[comp.nome] = match[match.length - 1].replace(',', '.');  // PEGA o último grupo = número
           entrada = entrada.replace(match[0], '');
         }
       });
@@ -189,4 +189,5 @@
   <div class="footer-credit">by chatGPT e Leo.SS</div>
 </body>
 </html>
+
 
