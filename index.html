@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <title>Organizador de Resultados Laboratoriais</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; min-height: 100vh; margin: 0; box-sizing: border-box; }
-    textarea { width: 100%; height: 150px; font-size: 16px; }
-    pre { background: #fff; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; height: 120px; overflow-y: auto; font-size: 16px; }
-    button { margin-top: 10px; padding: 10px 20px; font-size: 16px; margin-right: 10px; cursor: pointer; }
-    .footer-credit { position: fixed; bottom: 5px; right: 10px; font-size: 11px; color: #888; font-style: italic; user-select: none; opacity: 0.6; }
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    textarea { width: 100%; height: 150px; }
+    pre { background: #fff; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap; min-height: 50px; }
+    button { margin-top: 10px; padding: 10px; }
+    .footer-credit { font-size: 11px; color: #888; font-style: italic; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -17,6 +17,7 @@
 <textarea id="entrada" placeholder="Cole os resultados aqui..."></textarea><br>
 <button onclick="processar()">Organizar</button>
 <button onclick="copiar()">Copiar Resultado</button>
+
 <h3>Resultado Formatado:</h3>
 <pre id="saida">Nenhum valor reconhecido.</pre>
 
@@ -51,11 +52,11 @@ function normalizarTexto(texto) {
   return removerAcentos(texto.toLowerCase()).replace(/[^a-z0-9]/g, '');
 }
 
-function encontrarSigla(chave) {
-  const chaveNormalizada = normalizarTexto(chave);
+function encontrarSigla(nome) {
+  const nomeNorm = normalizarTexto(nome);
   for (let sigla in sinonimos) {
-    for (const s of sinonimos[sigla]) {
-      if (chaveNormalizada === normalizarTexto(s)) {
+    for (let sin of sinonimos[sigla]) {
+      if (nomeNorm.includes(normalizarTexto(sin))) {
         return sigla;
       }
     }
@@ -63,47 +64,21 @@ function encontrarSigla(chave) {
   return null;
 }
 
-function removerDatas(texto) {
-  return texto.replace(/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/g, '');
-}
-
 function processar() {
   let entrada = document.getElementById('entrada').value;
-  entrada = removerDatas(entrada);
-  entrada = entrada.replace(/\r?\n|\r/g, ' ');  // Substitui quebras de linha por espaço
+  entrada = entrada.replace(/\r?\n|\r/g, ' '); // remove quebras de linha
 
-  let palavras = entrada.split(/\s+/);
-  let mapa = {};
+  const regex = /([A-ZÁ-Úa-zá-ú.\-\/ ]{2,})\s*([\d.,]+)/g;
+  let match;
+  const mapa = {};
 
-  for (let i = 0; i < palavras.length; i++) {
-    let conjunto = palavras[i];
+  while ((match = regex.exec(entrada)) !== null) {
+    let nome = match[1].trim();
+    let valor = match[2].replace(',', '.');
 
-    // Tenta juntar palavras se não for número
-    let next = palavras[i + 1] || '';
-    let joined = conjunto + ' ' + next;
-
-    let sigla = encontrarSigla(conjunto) || encontrarSigla(joined);
-
-    if (sigla) {
-      let valor = null;
-
-      // Se achou na junção, pula a próxima palavra
-      if (sigla === encontrarSigla(joined)) {
-        i++;
-      }
-
-      // Verifica próximos até achar número
-      for (let j = i + 1; j < palavras.length; j++) {
-        if (/^[\d.,]+$/.test(palavras[j])) {
-          valor = palavras[j].replace(',', '.');
-          i = j;  // avança índice
-          break;
-        }
-      }
-
-      if (valor && !mapa[sigla]) {
-        mapa[sigla] = valor;
-      }
+    let sigla = encontrarSigla(nome);
+    if (sigla && !mapa[sigla]) {
+      mapa[sigla] = valor;
     }
   }
 
@@ -121,11 +96,13 @@ function processar() {
 function copiar() {
   const texto = document.getElementById("saida").textContent;
   navigator.clipboard.writeText(texto).then(() => {
-    alert("Resultado copiado para a área de transferência!");
+    alert("Resultado copiado!");
   });
 }
 </script>
 
 <div class="footer-credit">by chatGPT e Leo.SS</div>
+
 </body>
 </html>
+
