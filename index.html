@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Organizador de Resultados Laboratoriais</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; min-height: 100vh; margin: 0; box-sizing: border-box; }
@@ -12,132 +12,120 @@
   </style>
 </head>
 <body>
-  <h2>Organizador de Resultados Laboratoriais</h2>
-  <textarea id="entrada" placeholder="Cole os resultados aqui..."></textarea><br />
-  <button onclick="processar()">Organizar</button>
-  <button onclick="copiar()">Copiar Resultado</button>
-  <h3>Resultado Formatado:</h3>
-  <pre id="saida">Nenhum valor reconhecido.</pre>
 
-  <script>
-    const sinonimos = {
-      'HB': ['hb', 'hemoglobina'],
-      'HCT': ['hct', 'hematocrito', 'hematócrito'],
-      'LEUCO': ['leuco', 'leucocitos', 'leucócitos'],
-      'PLT': ['plt', 'plaquetas', 'plq', 'PLQ'],
-      'INR': ['inr', 'RNI'],
-      'TTPA': ['ttpa', 'Tempo Tromboplastina Parcial Ativada'],
-      'TAP': ['tap', 'Atividade de Protrombina'],
-      'RR': ['rr', 'ratio', 'rátio', 'Relação Paciente/Normal'],
-      'U': ['ureia', 'urea', 'u'],
-      'CR': ['creatinina', 'cr'],
-      'NA': ['na', 'sodio', 'sódio'],
-      'K': ['k', 'potassio', 'potássio'],
-      'PCR': ['pcr', 'Proteina C Reativa', 'Proteína C Reativa'],
-      'GLI': ['glicose', 'glucose', 'gli', 'glicemia', 'glicemia em jejum'],
-      'AST': ['tgo', 'ast'],
-      'ALT': ['tgp', 'alt'],
-      'TSH': ['tsh'],
-      'T4': ['t4', 'tiroxina'],
-      'T3': ['t3', 'tri-iodotironina']
-    };
+<h2>Organizador de Resultados Laboratoriais</h2>
+<textarea id="entrada" placeholder="Cole os resultados aqui..."></textarea><br>
+<button onclick="processar()">Organizar</button>
+<button onclick="copiar()">Copiar Resultado</button>
+<h3>Resultado Formatado:</h3>
+<pre id="saida">Nenhum valor reconhecido.</pre>
 
-    function removerAcentos(texto) {
-      return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    }
+<script>
+const sinonimos = {
+  'HB': ['hb', 'hemoglobina'],
+  'HCT': ['hct', 'hematocrito', 'hematócrito'],
+  'LEUCO': ['leuco', 'leucocitos', 'leucócitos'],
+  'PLT': ['plt', 'plaquetas', 'plq'],
+  'INR': ['inr', 'rni'],
+  'TTPA': ['ttpa', 'tempo tromboplastina parcial ativada'],
+  'TAP': ['tap', 'atividade de protrombina'],
+  'RR': ['rr', 'ratio', 'rátio', 'relação paciente/normal'],
+  'U': ['ureia', 'urea', 'u'],
+  'CR': ['creatinina', 'crea', 'cr'],
+  'NA': ['na', 'sodio', 'sódio'],
+  'K': ['k', 'potassio', 'potássio'],
+  'PCR': ['pcr', 'proteina c reativa', 'proteína c reativa'],
+  'GLI': ['glicose', 'glucose', 'gli', 'glicemia'],
+  'AST': ['tgo', 'ast'],
+  'ALT': ['tgp', 'alt'],
+  'TSH': ['tsh'],
+  'T4': ['t4', 'tiroxina'],
+  'T3': ['t3', 'tri-iodotironina']
+};
 
-    function normalizar(chave) {
-      const chaveLimpa = removerAcentos(chave.toLowerCase()).replace(/[^a-z0-9]/g, '');
-      for (let sigla in sinonimos) {
-        for (const s of sinonimos[sigla]) {
-          const sLimpa = removerAcentos(s.toLowerCase()).replace(/[^a-z0-9]/g, '');
-          if (chaveLimpa === sLimpa) {
-            return sigla;
-          }
-        }
+function removerAcentos(texto) {
+  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function normalizarTexto(texto) {
+  return removerAcentos(texto.toLowerCase()).replace(/[^a-z0-9]/g, '');
+}
+
+function encontrarSigla(chave) {
+  const chaveNormalizada = normalizarTexto(chave);
+  for (let sigla in sinonimos) {
+    for (const s of sinonimos[sigla]) {
+      if (chaveNormalizada === normalizarTexto(s)) {
+        return sigla;
       }
-      return null;
     }
+  }
+  return null;
+}
 
-    function removerDatasIntervalos(texto) {
-      return texto.replace(/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/g, ' ');
-    }
+function removerDatas(texto) {
+  return texto.replace(/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/g, '');
+}
 
-    function extrairValor(texto) {
-      if (!texto) return null;
-      if (texto.includes('/')) return null;
-      const match = texto.match(/^[\d.,]+%?$/);
-      if (match) {
-        return match[0].replace(",", ".");
+function processar() {
+  let entrada = document.getElementById('entrada').value;
+  entrada = removerDatas(entrada);
+  entrada = entrada.replace(/\r?\n|\r/g, ' ');  // Substitui quebras de linha por espaço
+
+  let palavras = entrada.split(/\s+/);
+  let mapa = {};
+
+  for (let i = 0; i < palavras.length; i++) {
+    let conjunto = palavras[i];
+
+    // Tenta juntar palavras se não for número
+    let next = palavras[i + 1] || '';
+    let joined = conjunto + ' ' + next;
+
+    let sigla = encontrarSigla(conjunto) || encontrarSigla(joined);
+
+    if (sigla) {
+      let valor = null;
+
+      // Se achou na junção, pula a próxima palavra
+      if (sigla === encontrarSigla(joined)) {
+        i++;
       }
-      return null;
-    }
 
-    function separarNumerosLetras(texto) {
-      return texto.replace(/([0-9.,])([a-zA-Z])/g, '$1 $2')
-                  .replace(/([a-zA-Z])([0-9.,])/g, '$1 $2');
-    }
-
-    function processar() {
-      let entradaRaw = document.getElementById('entrada').value;
-      entradaRaw = removerDatasIntervalos(entradaRaw);
-      let entrada = entradaRaw;
-
-      let mapa = {};
-
-      entrada = separarNumerosLetras(entrada);
-      const palavrasRaw = entrada.replace(/\n/g, ' ').trim().split(/\s+/);
-
-      for (let i = 0; i < palavrasRaw.length; i++) {
-        let palavra = palavrasRaw[i];
-        let sigla = normalizar(palavra);
-
-        if (!sigla) {
-          // Se não encontrou diretamente, tenta o padrão: "NOME NUMERO"
-          const regex = /^([a-zA-Z]+)[:\-]?([\d.,%]+)$/;
-          const res = palavra.match(regex);
-          if (res) {
-            sigla = normalizar(res[1]);
-            if (sigla && !mapa[sigla]) {
-              let val = res[2].replace(",", ".");
-              mapa[sigla] = val;
-            }
-          }
-          continue;
-        }
-
-        if (!mapa[sigla]) {
-          let valor = extrairValor(palavrasRaw[i + 1]);
-          if (valor) {
-            mapa[sigla] = valor;
-            i++;
-          }
+      // Verifica próximos até achar número
+      for (let j = i + 1; j < palavras.length; j++) {
+        if (/^[\d.,]+$/.test(palavras[j])) {
+          valor = palavras[j].replace(',', '.');
+          i = j;  // avança índice
+          break;
         }
       }
 
-      const ordem = ['HB', 'HCT', 'LEUCO', 'PLT', 'INR', 'TTPA', 'TAP', 'RR',
-                     'U', 'CR', 'NA', 'K', 'PCR', 'GLI', 'AST', 'ALT', 'TSH', 'T4', 'T3'];
-
-      let resultado = ordem
-        .map(sigla => mapa[sigla] ? `${sigla} ${mapa[sigla]}` : null)
-        .filter(Boolean)
-        .join(' ');
-
-      document.getElementById('saida').textContent = resultado || "Nenhum valor reconhecido.";
+      if (valor && !mapa[sigla]) {
+        mapa[sigla] = valor;
+      }
     }
+  }
 
-    function copiar() {
-      const texto = document.getElementById("saida").textContent;
-      navigator.clipboard.writeText(texto).then(() => {
-        alert("Resultado copiado para a área de transferência!");
-      });
-    }
-  </script>
+  const ordem = ['HB', 'HCT', 'LEUCO', 'PLT', 'INR', 'TTPA', 'TAP', 'RR',
+                 'U', 'CR', 'NA', 'K', 'PCR', 'GLI', 'AST', 'ALT', 'TSH', 'T4', 'T3'];
 
-  <div class="footer-credit">by chatGPT e Leo.SS</div>
+  let resultado = ordem
+    .map(sigla => mapa[sigla] ? `${sigla} ${mapa[sigla]}` : null)
+    .filter(Boolean)
+    .join(' ');
+
+  document.getElementById('saida').textContent = resultado || "Nenhum valor reconhecido.";
+}
+
+function copiar() {
+  const texto = document.getElementById("saida").textContent;
+  navigator.clipboard.writeText(texto).then(() => {
+    alert("Resultado copiado para a área de transferência!");
+  });
+}
+</script>
+
+<div class="footer-credit">by chatGPT e Leo.SS</div>
 </body>
 </html>
-
-
-
-
